@@ -10,21 +10,36 @@
 #include <fcntl.h>
 
 int main(){
-    int shmid;
+    int shmid, shmidSize;
     char pathname[] = "mem.c";
-    key_t key;
+    key_t key, keySize;
     char *input;
+    int *size;
 
-    if((key = ftok(pathname, 0)) < 0){
+    if((keySize = ftok(pathname, 0)) < 0){
         printf("Cant generate the key!\n");
         exit(-1);
     }
 
-    struct stat buf;
-    stat("shcodew.c", &buf);
-    int size = buf.st_size;
+    if((key = ftok(pathname, 1)) < 0){
+        printf("Cant generate the key!\n");
+        exit(-1);
+    }
+    
+    if((shmidSize = shmget(keySize, sizeof(int), 0)) < 0){
+        printf("Can\'t create shared memory\n");
+        exit(-1);
+    }
 
-    if((shmid = shmget(key, size, 0)) < 0){
+    if((size = shmat(shmidSize, NULL, 0)) == (int *)(-1)){
+        printf("Can\'t attach shared memory\n");
+        exit(-1);
+    }
+    // struct stat buf;
+    // stat("shcodew.c", &buf);
+    // int size = buf.st_size;
+
+    if((shmid = shmget(key, *size, 0)) < 0){
         printf("Can\'t get shared memory id\n");
         exit(-1);
     }
@@ -32,7 +47,7 @@ int main(){
         printf("Can\'t attach shared memory\n");
         exit(-1);
     }
-    for(int i = 0; i < size; i++){
+    for(int i = 0; i < *size; i++){
         printf("%c", input[i]);
     }
 

@@ -10,13 +10,33 @@
 #include <fcntl.h>
 
 int main(){
-    int shmid;
+    int shmid, shmidSize;
     char pathname[] = "mem.c";
-    key_t key;
+    key_t key, keySize;
     char *output;
+    int *size;
 
-    if((key = ftok(pathname, 0)) < 0){
+    if((keySize = ftok(pathname, 0)) < 0){
         printf("Cant generate the key!\n");
+        exit(-1);
+    }
+
+    if((key = ftok(pathname, 1)) < 0){
+        printf("Cant generate the key!\n");
+        exit(-1);
+    }
+
+    /*
+    Выделяем первую разделяемую память, чтобы передать размер второй разделяемой памяти
+    */
+
+    if((shmidSize = shmget(keySize, sizeof(int), IPC_CREAT | 0666)) < 0){
+        printf("Can\'t create shared memory\n");
+        exit(-1);
+    }
+
+    if((size = shmat(shmidSize, NULL, 0)) == (int *)(-1)){
+        printf("Can\'t attach shared memory\n");
         exit(-1);
     }
 
@@ -27,10 +47,13 @@ int main(){
     }
     struct stat statistics;
     fstat(fd, &statistics);
-    int size = statistics.st_size;
-    printf("Size: %d\n", size);
+    //int size = statistics.st_size;
+    *size = statistics.st_size;
+    printf("Size: %d\n", *size);
 
-    if((shmid = shmget(key, size, IPC_CREAT | 0666)) < 0){
+    
+
+    if((shmid = shmget(key, *size, IPC_CREAT | 0666)) < 0){
         printf("Can\'t create shared memory\n");
         exit(-1);
     }
@@ -40,7 +63,7 @@ int main(){
         exit(-1);
     }
 
-    if(read(fd, output, size) < 0){
+    if(read(fd, output, *size) < 0){
         printf("Can\'t read the file\n");
         exit(-1);
     }

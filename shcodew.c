@@ -67,6 +67,11 @@ int main(){
         printf("Can\'t read the file\n");
         exit(-1);
     }
+    
+    if (shmdt(size) < 0){
+        printf("Can\'t detach Size shared memory\n");
+        exit(-1);
+    }
     if (shmdt(output) < 0){
         printf("Can\'t detach shared memory\n");
         exit(-1);

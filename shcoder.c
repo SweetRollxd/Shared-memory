@@ -50,7 +50,11 @@ int main(){
     for(int i = 0; i < *size; i++){
         printf("%c", input[i]);
     }
-
+    
+    if (shmdt(size) < 0){
+        printf("Can\'t detach Size shared memory\n");
+        exit(-1);
+    }
     if (shmdt(input) < 0){
         printf("Can\'t detach shared memory\n");
         exit(-1);
